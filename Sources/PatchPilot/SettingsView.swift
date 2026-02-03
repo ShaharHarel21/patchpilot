@@ -101,6 +101,23 @@ struct SettingsView: View {
                 updater.checkForUpdates()
             }
             .disabled(!updater.canCheckForUpdates)
+
+            Toggle(
+                "Automatically check for PatchPilot updates",
+                isOn: Binding(
+                    get: { updater.automaticallyChecksForUpdates },
+                    set: { updater.setAutomaticallyChecksForUpdates($0) }
+                )
+            )
+
+            Toggle(
+                "Download and install updates automatically",
+                isOn: Binding(
+                    get: { updater.automaticallyDownloadsUpdates },
+                    set: { updater.setAutomaticallyDownloadsUpdates($0) }
+                )
+            )
+            .disabled(!updater.automaticallyChecksForUpdates)
         }
     }
 }

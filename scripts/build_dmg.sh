@@ -75,6 +75,12 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
   <string>SPARKLE_FEED_URL_REPLACE</string>
   <key>SUPublicEDKey</key>
   <string>SPARKLE_PUBLIC_KEY_REPLACE</string>
+  <key>SUEnableAutomaticChecks</key>
+  <true/>
+  <key>SUAllowsAutomaticUpdates</key>
+  <true/>
+  <key>SUAutomaticallyUpdate</key>
+  <true/>
 </dict>
 </plist>
 PLIST
