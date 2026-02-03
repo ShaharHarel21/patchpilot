@@ -136,8 +136,8 @@ struct UpdateMerger {
     }
 
     private static func status(for app: InstalledApp, update: UpdateInfo?) -> UpdateStatus {
-        guard let update else { return .unknown }
-        guard let installedVersion = app.comparisonVersion else { return .unknown }
+        guard let update else { return .notTracked }
+        guard let installedVersion = app.comparisonVersion else { return .unknownVersion }
         if Version.isNewer(available: update.latestVersion, than: installedVersion) {
             return .updateAvailable
         }

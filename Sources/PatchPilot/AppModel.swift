@@ -46,6 +46,10 @@ final class AppModel: ObservableObject {
         if showOnlyUpdates {
             return bySearch.filter { $0.status == .updateAvailable }
         }
+
+        if !preferences.showUntrackedApps {
+            return bySearch.filter { $0.status != .notTracked }
+        }
         return bySearch
     }
 
@@ -114,7 +118,7 @@ final class AppModel: ObservableObject {
                 await notificationManager.notifyUpdatesFound(count: updatesAvailableCount)
             }
         } catch {
-            rows = installed.map { AppUpdateRow(id: $0.id, installed: $0, updateInfo: nil, status: .unknown) }
+            rows = installed.map { AppUpdateRow(id: $0.id, installed: $0, updateInfo: nil, status: .notTracked) }
             brewUpdates = []
             isCheckingBrew = false
             lastChecked = Date()
@@ -163,6 +167,7 @@ struct Preferences: Codable, Equatable {
     var excludeAppStoreApps: Bool
     var checkSparkleAppcasts: Bool
     var includeHomebrewUpdates: Bool
+    var showUntrackedApps: Bool
 
     static func load() -> Preferences {
         let defaults = UserDefaults.standard
@@ -178,7 +183,8 @@ struct Preferences: Codable, Equatable {
             excludeSystemApps: true,
             excludeAppStoreApps: false,
             checkSparkleAppcasts: true,
-            includeHomebrewUpdates: false
+            includeHomebrewUpdates: false,
+            showUntrackedApps: false
         )
     }
 

@@ -34,6 +34,9 @@ struct SettingsView: View {
         .onChange(of: model.preferences.includeHomebrewUpdates) { _ in
             Task { await model.refresh(triggeredByTimer: false) }
         }
+        .onChange(of: model.preferences.showUntrackedApps) { _ in
+            Task { await model.refresh(triggeredByTimer: false) }
+        }
     }
 
     private var catalogSection: some View {
@@ -93,6 +96,7 @@ struct SettingsView: View {
             Toggle("Hide macOS system apps", isOn: $model.preferences.excludeSystemApps)
             Toggle("Hide Mac App Store apps", isOn: $model.preferences.excludeAppStoreApps)
             Toggle("Include Homebrew updates", isOn: $model.preferences.includeHomebrewUpdates)
+            Toggle("Show untracked apps", isOn: $model.preferences.showUntrackedApps)
         }
     }
 

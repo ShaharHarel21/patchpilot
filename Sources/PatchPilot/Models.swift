@@ -35,7 +35,8 @@ struct InstalledApp: Identifiable {
 enum UpdateStatus: String {
     case upToDate = "Up to date"
     case updateAvailable = "Update available"
-    case unknown = "Unknown"
+    case notTracked = "Not tracked"
+    case unknownVersion = "Unknown version"
 }
 
 enum UpdateSource: String {

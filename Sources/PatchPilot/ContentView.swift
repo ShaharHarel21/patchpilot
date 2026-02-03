@@ -205,7 +205,9 @@ private struct StatusBadge: View {
             return .green
         case .updateAvailable:
             return .orange
-        case .unknown:
+        case .notTracked:
+            return .secondary
+        case .unknownVersion:
             return .secondary
         }
     }
