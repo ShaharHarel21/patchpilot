@@ -63,6 +63,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
   <string>APP_VERSION_REPLACE</string>
   <key>CFBundleExecutable</key>
   <string>PatchPilot</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>LSMinimumSystemVersion</key>
@@ -78,6 +80,15 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
 PLIST
 
 perl -0pi -e "s|BUNDLE_ID_REPLACE|$BUNDLE_ID|g; s|APP_BUILD_REPLACE|$APP_BUILD|g; s|APP_VERSION_REPLACE|$APP_VERSION|g; s|SPARKLE_FEED_URL_REPLACE|$SPARKLE_FEED_URL|g; s|SPARKLE_PUBLIC_KEY_REPLACE|$SPARKLE_PUBLIC_KEY|g" "$CONTENTS_DIR/Info.plist"
+
+if [[ -f "$ROOT_DIR/Sources/PatchPilot/Resources/AppIcon.icns" ]]; then
+  cp "$ROOT_DIR/Sources/PatchPilot/Resources/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
+fi
+
+RESOURCE_BUNDLE_PATH="$(find "$BUILD_DIR" -name "PatchPilot_PatchPilot.bundle" -print -quit 2>/dev/null || true)"
+if [[ -n "$RESOURCE_BUNDLE_PATH" && -d "$RESOURCE_BUNDLE_PATH" ]]; then
+  rsync -a "$RESOURCE_BUNDLE_PATH" "$RESOURCES_DIR/"
+fi
 
 if [[ -z "$SPARKLE_FRAMEWORK_PATH" ]]; then
   SPARKLE_FRAMEWORK_PATH="$(find "$ROOT_DIR/.build" -name "Sparkle.framework" -print -quit 2>/dev/null || true)"
