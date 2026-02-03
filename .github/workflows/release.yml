@@ -1,0 +1,89 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build DMG
+        env:
+          APP_VERSION: "${{ github.ref_name }}"
+          APP_BUILD: "${{ github.run_number }}"
+          BUNDLE_ID: "com.yourcompany.patchpilot"
+          SPARKLE_FEED_URL: "https://github.com/${{ github.repository }}/releases/latest/download/appcast.xml"
+          SPARKLE_PUBLIC_KEY: "${{ secrets.SPARKLE_PUBLIC_KEY }}"
+        run: |
+          APP_VERSION="${APP_VERSION#v}"
+          export APP_VERSION
+          scripts/build_dmg.sh
+
+      - name: Download Sparkle tools
+        run: |
+          python3 - <<'PY'
+          import json
+          import urllib.request
+          import os
+
+          api = "https://api.github.com/repos/sparkle-project/Sparkle/releases/latest"
+          with urllib.request.urlopen(api) as response:
+            data = json.load(response)
+
+          url = None
+          for asset in data.get("assets", []):
+            name = asset.get("name", "")
+            if name.startswith("Sparkle-") and name.endswith(".tar.xz"):
+              url = asset.get("browser_download_url")
+              break
+
+          if not url:
+            raise SystemExit("Sparkle release asset not found")
+
+          print(url)
+          with urllib.request.urlopen(url) as response:
+            tarball = response.read()
+
+          with open("sparkle.tar.xz", "wb") as f:
+            f.write(tarball)
+          PY
+
+          tar -xf sparkle.tar.xz
+
+          SPARKLE_BIN=$(find . -path "*Sparkle/bin/generate_appcast" -print -quit)
+          if [[ -z "$SPARKLE_BIN" ]]; then
+            echo "generate_appcast not found"
+            exit 1
+          fi
+          echo "SPARKLE_BIN=$SPARKLE_BIN" >> $GITHUB_ENV
+
+      - name: Generate appcast
+        env:
+          SPARKLE_PRIVATE_KEY: "${{ secrets.SPARKLE_PRIVATE_KEY }}"
+        run: |
+          if [[ -z "$SPARKLE_PRIVATE_KEY" ]]; then
+            echo "SPARKLE_PRIVATE_KEY is not set"
+            exit 1
+          fi
+
+          printf "%s" "$SPARKLE_PRIVATE_KEY" > sparkle_priv.key
+          DOWNLOAD_PREFIX="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/"
+
+          "${SPARKLE_BIN}" --ed25519-priv-key sparkle_priv.key \
+            --download-url-prefix "$DOWNLOAD_PREFIX" \
+            dist
+
+      - name: Publish Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.dmg
+            dist/appcast.xml

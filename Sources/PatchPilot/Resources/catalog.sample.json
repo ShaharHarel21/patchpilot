@@ -1,0 +1,26 @@
+{
+  "lastUpdated": "2026-02-03",
+  "apps": [
+    {
+      "name": "Visual Studio Code",
+      "bundleIdentifier": "com.microsoft.VSCode",
+      "latestVersion": "1.96.0",
+      "downloadURL": "https://code.visualstudio.com/Download",
+      "notes": "Example entry"
+    },
+    {
+      "name": "Google Chrome",
+      "bundleIdentifier": "com.google.Chrome",
+      "latestVersion": "123.0.0",
+      "downloadURL": "https://www.google.com/chrome/",
+      "notes": "Example entry"
+    },
+    {
+      "name": "Slack",
+      "bundleIdentifier": "com.tinyspeck.slackmacgap",
+      "latestVersion": "4.39.0",
+      "downloadURL": "https://slack.com/downloads/mac",
+      "notes": "Example entry"
+    }
+  ]
+}
