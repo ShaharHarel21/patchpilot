@@ -97,10 +97,20 @@ struct ContentView: View {
         HStack {
             Text("Updates: \(model.updatesAvailableCount)")
             Spacer()
+            Text("Auto-update: \(autoUpdateStatus)")
+                .foregroundStyle(.secondary)
             Text("Last checked: \(model.lastCheckedText)")
                 .foregroundStyle(.secondary)
         }
         .padding(12)
+    }
+
+    private var autoUpdateStatus: String {
+        guard updater.automaticallyChecksForUpdates else { return "Off" }
+        if updater.automaticallyDownloadsUpdates {
+            return "On (silent)"
+        }
+        return "On"
     }
 }
 

@@ -8,6 +8,7 @@ final class UpdaterStore: ObservableObject {
     @Published var canCheckForUpdates = false
     @Published var automaticallyChecksForUpdates = false
     @Published var automaticallyDownloadsUpdates = false
+    @Published var updateCheckIntervalHours: Int = 6
 
     private var cancellables: Set<AnyCancellable> = []
 
@@ -27,6 +28,11 @@ final class UpdaterStore: ObservableObject {
             .receive(on: DispatchQueue.main)
             .assign(to: \.automaticallyDownloadsUpdates, on: self)
             .store(in: &cancellables)
+
+        let intervalSeconds = controller.updater.updateCheckInterval
+        if intervalSeconds > 0 {
+            updateCheckIntervalHours = max(1, Int(intervalSeconds / 3600))
+        }
     }
 
     func checkForUpdates() {
@@ -45,6 +51,12 @@ final class UpdaterStore: ObservableObject {
         if enabled && !controller.updater.automaticallyChecksForUpdates {
             controller.updater.automaticallyChecksForUpdates = true
         }
+    }
+
+    func setUpdateCheckIntervalHours(_ hours: Int) {
+        let clamped = max(1, min(hours, 24))
+        updateCheckIntervalHours = clamped
+        controller.updater.updateCheckInterval = TimeInterval(clamped * 3600)
     }
 }
 

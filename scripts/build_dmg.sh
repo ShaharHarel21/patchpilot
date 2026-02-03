@@ -76,11 +76,11 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
   <key>SUPublicEDKey</key>
   <string>SPARKLE_PUBLIC_KEY_REPLACE</string>
   <key>SUEnableAutomaticChecks</key>
-  <true/>
+  <false/>
   <key>SUAllowsAutomaticUpdates</key>
-  <true/>
+  <false/>
   <key>SUAutomaticallyUpdate</key>
-  <true/>
+  <false/>
 </dict>
 </plist>
 PLIST

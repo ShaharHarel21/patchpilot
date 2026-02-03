@@ -118,6 +118,18 @@ struct SettingsView: View {
                 )
             )
             .disabled(!updater.automaticallyChecksForUpdates)
+
+            Stepper(
+                value: Binding(
+                    get: { updater.updateCheckIntervalHours },
+                    set: { updater.setUpdateCheckIntervalHours($0) }
+                ),
+                in: 1...24,
+                step: 1
+            ) {
+                Text("Check every \(updater.updateCheckIntervalHours) hours")
+            }
+            .disabled(!updater.automaticallyChecksForUpdates)
         }
     }
 }
