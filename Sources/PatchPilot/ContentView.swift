@@ -10,6 +10,7 @@ struct ContentView: View {
             header
             Divider()
             table
+            brewSection
             footer
         }
         .frame(minWidth: 960, minHeight: 600)
@@ -93,9 +94,67 @@ struct ContentView: View {
         .padding(.horizontal, 12)
     }
 
+    private var brewSection: some View {
+        Group {
+            if model.preferences.includeHomebrewUpdates {
+                Divider()
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Homebrew Updates")
+                            .font(.headline)
+                        Spacer()
+                        if model.isCheckingBrew {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                        Text("\(model.brewUpdatesCount) outdated")
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+
+                    if let message = model.brewAlertMessage?.text {
+                        Text(message)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 16)
+                    }
+
+                    Table(model.brewUpdates) {
+                        TableColumn("Package") { row in
+                            Text(row.name)
+                        }
+                        TableColumn("Installed") { row in
+                            Text(row.installedVersion)
+                        }
+                        TableColumn("Latest") { row in
+                            Text(row.latestVersion)
+                        }
+                        TableColumn("Type") { row in
+                            Text(row.kind.rawValue)
+                        }
+                        TableColumn("Action") { row in
+                            Button("Copy upgrade") {
+                                let pasteboard = NSPasteboard.general
+                                pasteboard.clearContents()
+                                pasteboard.setString(row.upgradeCommand, forType: .string)
+                            }
+                        }
+                        .width(min: 140)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
+                }
+            }
+        }
+    }
+
     private var footer: some View {
         HStack {
             Text("Updates: \(model.updatesAvailableCount)")
+            if model.preferences.includeHomebrewUpdates {
+                Text("Homebrew: \(model.brewUpdatesCount)")
+            }
             Spacer()
             Text("Auto-update: \(autoUpdateStatus)")
                 .foregroundStyle(.secondary)

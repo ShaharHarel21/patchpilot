@@ -5,9 +5,12 @@ import AppKit
 @MainActor
 final class AppModel: ObservableObject {
     @Published var rows: [AppUpdateRow] = []
+    @Published var brewUpdates: [BrewUpdateRow] = []
     @Published var isChecking = false
+    @Published var isCheckingBrew = false
     @Published var lastChecked: Date?
     @Published var alertMessage: AlertMessage?
+    @Published var brewAlertMessage: AlertMessage?
     @Published var searchText = ""
     @Published var showOnlyUpdates = false
     @Published var preferences: Preferences = Preferences.load() {
@@ -22,6 +25,10 @@ final class AppModel: ObservableObject {
 
     var updatesAvailableCount: Int {
         rows.filter { $0.status == .updateAvailable }.count
+    }
+
+    var brewUpdatesCount: Int {
+        brewUpdates.count
     }
 
     var filteredRows: [AppUpdateRow] {
@@ -61,6 +68,7 @@ final class AppModel: ObservableObject {
         guard !isChecking else { return }
         isChecking = true
         alertMessage = nil
+        brewAlertMessage = nil
         defer { isChecking = false }
 
         let installed = AppScanner.scan(
@@ -69,7 +77,11 @@ final class AppModel: ObservableObject {
         )
         do {
             let source = try catalogSource()
-            let catalog = try await UpdateCatalogLoader.load(source: source)
+            async let catalog = UpdateCatalogLoader.load(source: source)
+            let brewTask: Task<[BrewUpdateRow], Error>? = preferences.includeHomebrewUpdates
+                ? Task { try await BrewService.fetchOutdated() }
+                : nil
+            let catalogResult = try await catalog
             let appcastEntries: [String: AppcastEntry]
             if preferences.checkSparkleAppcasts {
                 appcastEntries = await AppcastService.fetchEntries(for: installed)
@@ -78,10 +90,24 @@ final class AppModel: ObservableObject {
             }
             let merged = UpdateMerger.merge(
                 installed: installed,
-                catalogEntries: catalog.apps,
+                catalogEntries: catalogResult.apps,
                 appcastEntries: appcastEntries
             )
             rows = merged.sorted { $0.installed.name.localizedCaseInsensitiveCompare($1.installed.name) == .orderedAscending }
+
+            if let brewTask {
+                isCheckingBrew = true
+                do {
+                    brewUpdates = try await brewTask.value
+                } catch {
+                    brewUpdates = []
+                    brewAlertMessage = AlertMessage(text: error.localizedDescription)
+                }
+                isCheckingBrew = false
+            } else {
+                brewUpdates = []
+                isCheckingBrew = false
+            }
             lastChecked = Date()
 
             if preferences.notifyOnUpdates {
@@ -89,6 +115,8 @@ final class AppModel: ObservableObject {
             }
         } catch {
             rows = installed.map { AppUpdateRow(id: $0.id, installed: $0, updateInfo: nil, status: .unknown) }
+            brewUpdates = []
+            isCheckingBrew = false
             lastChecked = Date()
             alertMessage = AlertMessage(text: error.localizedDescription)
         }
@@ -134,6 +162,7 @@ struct Preferences: Codable, Equatable {
     var excludeSystemApps: Bool
     var excludeAppStoreApps: Bool
     var checkSparkleAppcasts: Bool
+    var includeHomebrewUpdates: Bool
 
     static func load() -> Preferences {
         let defaults = UserDefaults.standard
@@ -148,7 +177,8 @@ struct Preferences: Codable, Equatable {
             notifyOnUpdates: true,
             excludeSystemApps: true,
             excludeAppStoreApps: false,
-            checkSparkleAppcasts: true
+            checkSparkleAppcasts: true,
+            includeHomebrewUpdates: false
         )
     }
 
